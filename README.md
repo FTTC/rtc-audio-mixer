@@ -1,11 +1,9 @@
 ## 功能描述
 
-本文将介绍您可以使用 `AudioMixerPlugin`  实现的功能。
+本文将介绍 `AudioMixerPlugin` 可以实现的功能。
 
 - 功能一：在 [TRTC](https://www.npmjs.com/package/trtc-js-sdk) 中实现播放背景音乐的功能。[点击此处](https://web.sdk.qcloud.com/trtc/webrtc/demo/api-sample/improve-audio-mixer.html) 体验混音 demo 。
-- 功能二：在 推流时同时采集麦克风音频和系统声音/选项卡声音。
-
-
+- 功能二：同时采集麦克风声音和系统声音/选项卡声音。
 
 ## 功能一：在 TRTC 通话中播放背景音乐的功能
 
@@ -26,8 +24,6 @@
 | Android  |     移动版 Chrome 浏览器     | 81+                | ✔          | ✔            | ✔            | ✔            | ✔                                                    |
 | Android  |    微信内嵌网页(TBS内核)     | ✔                  | ✔          | ✔            | ✔            | ✔            | ✖                                                    |
 | Android  |       移动版 QQ 浏览器       | ✖                  |            |              |              |              |                                                      |
-
-
 
 ### Step1. 创建音乐实例
 
@@ -51,7 +47,7 @@ let audioSourceA = AudioMixerPlugin.createAudioSource({ url: 'https://audioSourc
 
 **注意事项**
 
-- 播放在线音效文件时，您需要配置线上音乐文件的 [CORS](https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Access_control_CORS) ，线上文件必须为 `https` 协议。
+- 播放在线音效文件时，音效文件必须支持 `CORS` ，且访问协议必须为 `https` 协议。
 - 支持的格式为 MP3，AAC（以及浏览器支持的其他音频格式）。
 - 网页在没有用户交互之前，浏览器禁止网页播放带有声音的媒体，建议引导用户执行点击行为后进行相关操作， 参考：[Autoplay_guide](https://developer.mozilla.org/en-US/docs/Web/Media/Autoplay_guide) 。
 
@@ -74,13 +70,13 @@ const localStream = TRTC.createStream({ userId: 'user', audio: true, video: true
 await localStream.initialize();
 // 1. 获取麦克风轨道
 let originAudioTrack = localStream.getAudioTrack();
-	
+
 // 2. 与 audioSourceA audioSourceB 混合后生成 mixedAudioTrack
 mixedAudioTrack = AudioMixerPlugin.mix({targetTrack: originAudioTrack, sourceList: [ audioSourceA, audioSourceB ]});
-		
+
 // 3. 替换麦克风轨道
 localStream.replaceTrack(mixedAudioTrack);
-        
+
 // 4. 发布
 client.publish(localStream);
 
@@ -129,7 +125,7 @@ localStream.replaceTrack(microAndBgmTrack);
 
 
 
-## 功能二：推流时同时采集麦克风音频和系统声音
+## 功能二：同时采集麦克风声音和系统声音/选项卡声音
 
 ### 支持的平台
 
@@ -148,16 +144,16 @@ import AudioMixerPlugin from 'rtc-audio-mixer';
 ```javascript
 // 创建屏幕分享流
 const screenStream = TRTC.createStream({
-  screenAudio: true,
-  screen: true,
-  ...
+	screenAudio: true,
+	screen: true,
+	...
 });
 
 // 创建麦克风音频流
 const localStream = TRTC.createStream({
-  audio: false,
-  video: true,
-  ...
+	audio: false,
+	video: true,
+	...
 });
 
 await screenStream.initialize();
@@ -206,6 +202,14 @@ if (!result) {
 
 用于创建一个 `AudioSource` 的音乐实例用于给音频轨道增加背景音乐。
 
+#### Params:
+
+| Name   | Type      | Attributes   | Description               |
+| ------ | --------- | ------------ | ------------------------- |
+| url    | `string`  |              | 音乐文件地址              |
+| loop   | `boolean` | `<optional>` | 是否循环播放，默认为false |
+| volume | `number`  | `<optional>` | 设置初始音量，默认为1     |
+
 **Example:**
 
 例一：通过文件地址创建
@@ -236,56 +240,67 @@ fileInput.addEventListener('change', function() {
 });
 ```
 
+### createAudioSourceFromElement(element)
+
+用于创建一个 `AudioSource` 的音乐实例用于给音频轨道增加背景音乐。
+
 #### Params:
 
-| Name   | Type      | Attributes   | Description               |
-| ------ | --------- | ------------ | ------------------------- |
-| url    | `string`  |              | 音乐文件地址              |
-| loop   | `boolean` | `<optional>` | 是否循环播放，默认为false |
-| volume | `number`  | `<optional>` | 设置初始音量，默认为1     |
+| Name    | Type                      | Description                  |
+|---------|---------------------------|------------------------------|
+| element | `HTMLAudioElement`        | 使用的 `HTMLAudioElement` 实例    |
 
+**Example:**
+```javascript
+let audioSourceA = AudioMixerPlugin.createAudioSourceFromElement(document.getElementById('audioElementA'));
+audioSourceA.play();
+```
 
 #### AudioSource 有如下方法：
 
-| Name                    | Type                                     | Description                                   |
-| ----------------------- | ---------------------------------------- | --------------------------------------------- |
-| play()                  |                                          | 播放音乐                                      |
-| pause()                 |                                          | 暂停音乐                                      |
-| resume()                |                                          | 重置音乐                                      |
-| stop()                  |                                          | 停止音乐                                      |
-| duration()              |                                          | 获取音乐的时长（s）                           |
-| setPosition(time)       | time: `number`（秒）                     | 设置音乐位置（不超过音乐的最长时长）          |
-| getPosition()           |                                          | 获取音乐当前播放位置                          |
-| setVolume(volume)       | volume: `number` (0 - 1)                 | 设置音量大小 （同时影响本地和远端播放的音量） |
-| getVolume()             |                                          | 获取音量大小                                  |
-| setPlayBackRate(rate)   | rate: `number` (1 - 5)                   | 设置播放速率 （1 - 5）                        |
-| getPlayBackRate()       |                                          | 获取播放速率                                  |
-| loop(loop)              | loop: `boolean`                          | 设置是否循环播放，不传 loop 返回 loop 的状态  |
-| on(eventName, handler)  | eventName: `number`  handler: `function` | 监听事件                                      |
-| off(eventName, handler) | eventName: `number`  handler: `function` | 取消监听事件                                  |
+| Name                    | Type                                     | Description                  |
+|-------------------------|------------------------------------------|------------------------------|
+| play()                  |                                          | 播放音乐                         |
+| pause()                 |                                          | 暂停音乐                         |
+| resume()                |                                          | 重置音乐                         |
+| stop()                  |                                          | 停止音乐                         |
+| duration()              |                                          | 获取音乐的时长（s）                   |
+| setPosition(time)       | time: `number`（秒）                        | 设置音乐位置（不超过音乐的最长时长）           |
+| getPosition()           |                                          | 获取音乐当前播放位置                   |
+| setVolume(volume)       | volume: `number` (0 - 1)                 | 设置音量大小 （同时影响本地和远端播放的音量）      |
+| getVolume()             |                                          | 获取音量大小                       |
+| setPlayBackRate(rate)   | rate: `number` (1 - 5)                   | 设置播放速率 （1 - 5）               |
+| getPlayBackRate()       |                                          | 获取播放速率                       |
+| loop(loop)              | loop: `boolean`                          | 设置是否循环播放，不传 loop 返回 loop 的状态 |
+| on(eventName, handler)  | eventName: `number`  handler: `function` | 监听事件                         |
+| off(eventName, handler) | eventName: `number`  handler: `function` | 取消监听事件                       |
+| destroy()               |                                          | 销毁创建的 AudioSource            |
 
 **事件列表**
 
-可以监听的事件与 HTMLAudioElement 的标准事件相同，查看：[事件列表](https://developer.mozilla.org/zh-CN/docs/Web/Guide/Events/Media_events) 。
+可以监听的事件与 HTMLAudioElement 的标准事件相同，查看：[事件列表](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement#events) 。
 
-| Name     | Description                                        |
-| -------- | -------------------------------------------------- |
-| play     | 开始播放音乐                                       |
-| progress | 音乐加载                                           |
-| end      | 音乐播放结束                                       |
-| ......   |                                                    |
-| error    | audio 加载、播放异常等错误，参考文章的常见问题部分 |
+| Name     | Description                      |
+|----------|----------------------------------|
+| play     | 开始播放音乐                           |
+| progress | 音乐加载                             |
+| ended    | 音乐播放结束                           |
+| ......   |                                  |
+| error    | audio 加载、播放异常等错误，参考文章的常见问题部分     |
 
 ```javascript
 // 监听播放事件
 audioSourceA.on('play', function play(event) {
-  console.log('play event trigger', event);
+	console.log('play event trigger', event);
 });
 
 // 取消监听所有事件
 audioSourceA.off('*', function cancel(event)  {
-  console.log('取消监听所有事件', event);
+	console.log('取消监听所有事件', event);
 });
+
+// 清理掉创建的 audioSourceA
+audioSourceA.destroy();
 ```
 
 ### mix(params)
@@ -293,6 +308,14 @@ audioSourceA.off('*', function cancel(event)  {
 用于将创建的音乐实例与音频轨道进行混音，targetTrack 为待混合的音频轨道，sourceList 为 createAudioSource 创建的音乐实例数组, 例：[ audioSourceA, audioSourceB ] 。
 
 当 targetTrack 不传参的时候， 此时生成纯背景音的音轨。
+
+### Params:
+
+| Name        | Type                      | Description            |
+| ----------- | ------------------------- | ---------------------- |
+| targetTrack | `MediaStreamTrack`        | 目标音频轨道           |
+| sourceList  | `Array<AudioSource>`      | AudioSource 的数组对象 |
+| trackList   | `Array<MediaStreamTrack>` | AudioTrack 的数组对象  |
 
 **Example:**
 
@@ -316,13 +339,15 @@ localStream.replaceTrack(mixedAudioTrack);
 let bgmTrack = AudioMixerPlugin.mix({ sourceList: [ audioSourceA, audioSourceB ] });
 ```
 
-### Params:
+### destroySource(mixedAudioTrack)
 
-| Name        | Type                      | Description            |
-| ----------- | ------------------------- | ---------------------- |
-| targetTrack | `MediaStreamTrack`        | 目标音频轨道           |
-| sourceList  | `Array<AudioSource>`      | AudioSource 的数组对象 |
-| trackList   | `Array<MediaStreamTrack>` | AudioTrack 的数组对象  |
+当你 unpublish 或者调用 leave 退房，则可以用 destroySource 来清理资源。
+
+```javascript
+client.leave();
+audioSource.destroy();
+AudioMixerPlugin.destroySource(mixedAudioTrack);
+```
 
 
 ## 常见问题
@@ -338,3 +363,12 @@ let bgmTrack = AudioMixerPlugin.mix({ sourceList: [ audioSourceA, audioSourceB ]
 例如：NotSupportedError: The operation is not supported.
 
 解决：您需要使用浏览器支持的音频格式。
+
+**3. 发布背景音乐后，想替换背景音乐**
+
+场景：您在发布背景音乐之后，想在通话过程中替换背景音乐。
+
+解决：
+
+1. 您可以重新采集一个新的 audioTrack，使用同样的流程增加新的背景音乐之后，使用 LocalStream 的 replaceTrack 方法替换正在推流的音频轨道，[点击参考](https://web.sdk.qcloud.com/trtc/webrtc/doc/zh-cn/tutorial-22-advanced-audio-mixer.html#h3-7) 。
+2. 您可以在一开始增加多个背景音，当需要某个背景音乐的时候，调用背景音乐 audioSource.play() 方法来播放，如果不需要播放的时候，调用背景音乐 audioSource.pause() 方法来停止播放即可。
